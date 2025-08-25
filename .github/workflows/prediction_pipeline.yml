@@ -9,6 +9,10 @@ jobs:
     outputs:
       prediction: ${{ steps.predict_step.outputs.result }}
     steps:
+      # --- FIX IS HERE: YOU NEED TO CHECKOUT THE CODE FIRST ---
+      - name: "Checkout Code"
+        uses: actions/checkout@v4
+
       - name: "Set up Python"
         uses: actions/setup-python@v4
         with:
@@ -41,5 +45,4 @@ jobs:
         run: echo "The model predicted this build would: ${{ needs.predict.outputs.prediction }}"
 
       - name: "Build with Maven"
-        # This is the standard build command for spring-petclinic
         run: ./mvnw package
