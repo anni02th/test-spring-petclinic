@@ -1,4 +1,4 @@
-name: Build Failure Prediction
+name: Build Failure Prediction and Test Data Generation
 
 on: [push]
 
@@ -10,6 +10,8 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -19,14 +21,26 @@ jobs:
       - name: Install Dependencies
         run: pip install -r requirements.txt
 
-      - name: Run Build Failure Prediction
+      - name: Run Prediction and Generate Test Data
         id: predict_step
+        env:
+          PREDICTION_API_URL: ${{ secrets.PREDICTION_API_URL }}
+          GITHUB_SHA: ${{ github.sha }} # Pass the commit hash to the script
         run: |
+          # The script now creates a CSV and prints the prediction
           PREDICTION_RESULT=$(python predict.py)
           echo "result=$PREDICTION_RESULT" >> "$GITHUB_OUTPUT"
           echo "Model Prediction: $PREDICTION_RESULT"
 
+      # --- NEW STEP: UPLOAD THE GENERATED CSV ---
+      - name: Upload Test Data CSV
+        uses: actions/upload-artifact@v4
+        with:
+          name: prediction-test-data # The name of the artifact bundle
+          path: ./*.csv # An expression that finds any CSV file in the root directory
+
   build:
+
     runs-on: ubuntu-latest
     needs: predict
     steps:
