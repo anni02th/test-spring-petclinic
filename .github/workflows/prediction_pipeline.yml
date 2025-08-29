@@ -3,14 +3,17 @@ name: Generate Build Data
 on: [push]
 
 jobs:
-  generate_data: # Renamed the job for clarity
+  generate_data:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
-          # Fetch full history to be able to compare commits
           fetch-depth: 0
+
+      # --- NEW STEP: Install cloc tool ---
+      - name: Install cloc
+        run: sudo apt-get update && sudo apt-get install -y cloc
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -22,8 +25,11 @@ jobs:
 
       - name: Run Data Collection Script
         env:
-          GITHUB_SHA: 7e1e86db6273cf31ff52ad85970781bfb56a26e5
-        run: python predict.py # Just run the script
+          GITHUB_SHA: ${{ github.sha }}
+          # Provide the token for API calls
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: python predict.py
 
       - name: Upload Test Data CSV
         uses: actions/upload-artifact@v4
